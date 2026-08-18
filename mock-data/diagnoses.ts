@@ -1,0 +1,53 @@
+import { Diagnosis } from "@/types";
+
+export const diagnoses: Diagnosis[] = [
+  {
+    id: "dx_001",
+    condition: "Type 2 Diabetes Mellitus",
+    icd10Code: "E11.9",
+    diagnosedDate: "2021-06-03",
+    status: "chronic",
+    severity: "moderate",
+    diagnosedBy: "Dr. Amara Osei, Endocrinology",
+    notes: "Diagnosed following elevated A1c on routine screening. Managed with metformin and lifestyle modification.",
+  },
+  {
+    id: "dx_002",
+    condition: "Essential Hypertension",
+    icd10Code: "I10",
+    diagnosedDate: "2020-11-18",
+    status: "chronic",
+    severity: "mild",
+    diagnosedBy: "Dr. Priya Chandran, Internal Medicine",
+    notes: "Blood pressure well-controlled on losartan. Continue home monitoring.",
+  },
+  {
+    id: "dx_003",
+    condition: "Hyperlipidemia",
+    icd10Code: "E78.5",
+    diagnosedDate: "2021-06-03",
+    status: "chronic",
+    severity: "mild",
+    diagnosedBy: "Dr. Amara Osei, Endocrinology",
+    notes: "LDL elevated at diagnosis; started on rosuvastatin with good response.",
+  },
+  {
+    id: "dx_004",
+    condition: "Seasonal Allergic Rhinitis",
+    icd10Code: "J30.2",
+    diagnosedDate: "2019-04-22",
+    status: "active",
+    severity: "mild",
+    diagnosedBy: "Dr. Priya Chandran, Internal Medicine",
+  },
+  {
+    id: "dx_005",
+    condition: "Right Ankle Sprain",
+    icd10Code: "S93.401A",
+    diagnosedDate: "2023-08-14",
+    status: "resolved",
+    severity: "mild",
+    diagnosedBy: "Dr. Kevin Marsh, Urgent Care",
+    notes: "Grade I sprain, resolved fully after 4 weeks of conservative management.",
+  },
+];

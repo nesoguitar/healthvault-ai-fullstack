@@ -1,0 +1,83 @@
+# HealthVault AI — full local stack.
+#
+#   docker compose up --build          start db + backend + frontend
+#   docker compose exec backend alembic upgrade head     run migrations
+#   docker compose exec backend python -m app.seed        load demo patient
+#
+# Frontend:  http://localhost:3000
+# API docs:  http://localhost:8000/api/v1/docs
+# Demo login: nathan.mekhaeil@example.com / DemoPass123!  (after seeding)
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: healthvault-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: healthvault
+      POSTGRES_PASSWORD: healthvault
+      POSTGRES_DB: healthvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - healthvault_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthvault -d healthvault"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: healthvault-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: local
+      DEBUG: "true"
+      DATABASE_URL: postgresql+psycopg://healthvault:healthvault@db:5432/healthvault
+      BACKEND_CORS_ORIGINS: http://localhost:3000
+      JWT_SECRET_KEY: local_dev_secret_do_not_use_in_production_${JWT_SUFFIX:-0001}
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
+      LOCAL_STORAGE_PATH: /app/uploads
+      AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING:-}
+      AZURE_STORAGE_CONTAINER_NAME: ${AZURE_STORAGE_CONTAINER_NAME:-medical-records}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+      AZURE_OPENAI_CHAT_DEPLOYMENT: ${AZURE_OPENAI_CHAT_DEPLOYMENT:-gpt-4o}
+      AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-text-embedding-3-small}
+      DOCUMENT_INTELLIGENCE_ENABLED: ${DOCUMENT_INTELLIGENCE_ENABLED:-false}
+      AZURE_DOCINTEL_ENDPOINT: ${AZURE_DOCINTEL_ENDPOINT:-}
+      AZURE_DOCINTEL_API_KEY: ${AZURE_DOCINTEL_API_KEY:-}
+      AUDIT_LOG_ENABLED: "true"
+    volumes:
+      - healthvault_uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healthvault-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+
+volumes:
+  healthvault_db_data:
+  healthvault_uploads:
