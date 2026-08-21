@@ -39,14 +39,6 @@ app.add_middleware(
 
 @app.middleware("http")
 async def add_security_headers_and_request_id(request: Request, call_next):
-    """
-    - Tags every request/response with an X-Request-ID for traceability
-      across logs (useful when correlating an audit_log row back to a
-      support ticket).
-    - Adds baseline security headers appropriate for an API serving PHI:
-      no caching of responses by intermediaries, no MIME sniffing, and a
-      restrictive referrer policy.
-    """
     request_id = str(uuid.uuid4())
     start = time.time()
 
@@ -72,20 +64,18 @@ async def add_security_headers_and_request_id(request: Request, call_next):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # Keep validation error bodies generic-ish; avoid echoing raw PHI values
-    # back in error messages where FastAPI's default handler would.
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": "Validation failed", "errors": exc.errors()},
     )
 
 
+# ✅ Include your API routers
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health", tags=["System"])
 def health_check():
-    """Liveness/readiness probe — deliberately returns no PHI or config detail."""
     return {"status": "ok", "environment": settings.ENVIRONMENT}
 
 
@@ -95,21 +85,3 @@ def root():
         "service": settings.PROJECT_NAME,
         "docs": f"{settings.API_V1_PREFIX}/docs" if settings.DEBUG else "disabled in this environment",
     }
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI()
-
-# Allow requests from your frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],  # allow all HTTP methods
-    allow_headers=["*"],  # allow all headers
-)
-
-# Example route
-@app.get("/")
-def read_root():
-    return {"message": "CORS is working!"}
