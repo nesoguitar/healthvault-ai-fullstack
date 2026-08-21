@@ -23,9 +23,9 @@ app = FastAPI(
         "All PHI-bearing endpoints require authentication and are scoped to the "
         "authenticated user's own patient record."
     ),
-    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json" if settings.DEBUG else None,
-    docs_url=f"{settings.API_V1_PREFIX}/docs" if settings.DEBUG else None,
-    redoc_url=f"{settings.API_V1_PREFIX}/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 app.add_middleware(
