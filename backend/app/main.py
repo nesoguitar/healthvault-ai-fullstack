@@ -65,10 +65,17 @@ async def add_security_headers_and_request_id(request: Request, call_next):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    safe_errors = []
+    for err in exc.errors():
+        # Ensure every message is a string
+        msg = err.get("msg")
+        safe_errors.append({**err, "msg": str(msg)})
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": "Validation failed", "errors": exc.errors()},
+        content={"detail": "Validation failed", "errors": safe_errors},
     )
+
+
 
 
 # ✅ Include your API routers
